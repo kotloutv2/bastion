@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UserApi", "UserApi\UserApi.csproj", "{BFD85044-F582-41E8-9D7B-77515356108D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RvmsModels", "RvmsModels\RvmsModels.csproj", "{A2B92191-0A75-4CE2-942D-5063741054B1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{BFD85044-F582-41E8-9D7B-77515356108D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BFD85044-F582-41E8-9D7B-77515356108D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BFD85044-F582-41E8-9D7B-77515356108D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A2B92191-0A75-4CE2-942D-5063741054B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A2B92191-0A75-4CE2-942D-5063741054B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A2B92191-0A75-4CE2-942D-5063741054B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A2B92191-0A75-4CE2-942D-5063741054B1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
