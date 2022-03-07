@@ -1,0 +1,26 @@
+{
+	"id": "saulg",
+	"Name": "Saul Goodman",
+	"Email": "saul@bettercallsaul.com",
+	"Role": "PATIENT",
+	"Vitals": {
+	  "Ecg": [
+		{
+		  "timestamp": "2022-03-07T21:11:11.823Z",
+		  "value": 90.78
+		}
+	  ],
+	  "HeartRate": [
+		{
+		  "timestamp": "2022-03-07T21:11:11.823Z",
+		  "value": 60.5
+		}
+	  ],
+	  "Spo2": [
+		{
+		  "timestamp": "2022-03-07T21:11:11.823Z",
+		  "value": 97.9
+		}
+	  ]
+	}
+}
