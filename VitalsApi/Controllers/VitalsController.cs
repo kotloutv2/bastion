@@ -2,7 +2,7 @@ using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Cosmos;
 using RvmsModels;
-using User = RvmsModels.User;
+using System.Text.Json;
 
 namespace VitalsApi.Controllers;
 
@@ -55,11 +55,12 @@ public class VitalsController : ControllerBase
     {
         try
         {
-            User user = await _container.ReadItemAsync<User>(userId, new PartitionKey(userId));
+            RvmsModels.User user = await _container.ReadItemAsync<RvmsModels.User>(userId, new PartitionKey(userId));
             return Ok(user.Vitals);
         }
-        catch (CosmosException)
+        catch (CosmosException ce)
         {
+            _logger.LogError(ce, "Error while trying to read from user {userId}", userId);
             return NotFound();
         }
     }
@@ -70,11 +71,11 @@ public class VitalsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Put(string userId, [FromBody] Vitals vitals)
     {
-        User user;
+        RvmsModels.User user;
         PartitionKey partitionKey = new(userId);
         try
         {
-            user = await _container.ReadItemAsync<User>(userId, partitionKey);
+            user = await _container.ReadItemAsync<RvmsModels.User>(userId, partitionKey);
         }
         catch (CosmosException)
         {
@@ -84,7 +85,16 @@ public class VitalsController : ControllerBase
         user.Vitals.Ecg.AddRange(vitals.Ecg);
         user.Vitals.HeartRate.AddRange(vitals.HeartRate);
         user.Vitals.SpO2.AddRange(vitals.SpO2);
-        await _container.UpsertItemAsync(user, partitionKey);
+        try
+        {
+            await _container.UpsertItemAsync(user, partitionKey);
+        }
+        catch (CosmosException ce)
+        {
+            _logger.LogError(ce, "Error while trying to put new vitals for user {userId}", userId);
+            return StatusCode(ce.SubStatusCode, ce.Message);
+        }
+
         return NoContent();
     }
 }
