@@ -83,7 +83,7 @@ public class VitalsController : ControllerBase
         }
 
         user.Vitals.Ecg.AddRange(vitals.Ecg);
-        user.Vitals.HeartRate.AddRange(vitals.HeartRate);
+        user.Vitals.SkinTemperature.AddRange(vitals.SkinTemperature);
         user.Vitals.SpO2.AddRange(vitals.SpO2);
         try
         {

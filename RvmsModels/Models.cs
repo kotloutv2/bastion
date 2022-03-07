@@ -20,7 +20,7 @@ public class User
 public class Vitals
 {
     public List<TimestampedVital> Ecg { get; set; } = new();
-    public List<TimestampedVital> HeartRate { get; set; } = new();
+    public List<TimestampedVital> SkinTemperature { get; set; } = new();
     public List<TimestampedVital> SpO2 { get; set; } = new();
 }
 
