@@ -10,19 +10,19 @@ public enum Role
 
 public class User
 {
-    [JsonProperty(PropertyName = "email")] public string Id => Email;
-
+    [JsonProperty(PropertyName = "id")] public string Id { get; set; }
     [JsonProperty(PropertyName = "name")] public string Name { get; set; }
     [JsonProperty(PropertyName = "email")] public string Email { get; set; }
-
     [JsonProperty(PropertyName = "role")] public Role Role { get; set; }
+    [JsonProperty(PropertyName = "vitals")]
+    public Vitals Vitals { get; set; } = new();
 }
 
 public class Vitals
 {
-    [JsonProperty(PropertyName = "ECG")] public IEnumerable<TimestampedVital> Ecg { get; set; }
-    [JsonProperty(PropertyName = "HR")] public IEnumerable<TimestampedVital> HeartRate { get; set; }
-    [JsonProperty(PropertyName = "SpO2")] public IEnumerable<TimestampedVital> SpO2 { get; set; }
+    [JsonProperty(PropertyName = "ECG")] public List<TimestampedVital> Ecg { get; set; } = new();
+    [JsonProperty(PropertyName = "HR")] public List<TimestampedVital> HeartRate { get; set; } = new();
+    [JsonProperty(PropertyName = "SpO2")] public List<TimestampedVital> SpO2 { get; set; } = new();
 }
 
 public struct TimestampedVital
