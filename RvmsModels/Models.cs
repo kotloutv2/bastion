@@ -1,6 +1,6 @@
-﻿namespace RvmsModels;
+﻿using Newtonsoft.Json;
 
-using Newtonsoft.Json;
+namespace RvmsModels;
 
 public enum Role
 {
@@ -10,19 +10,18 @@ public enum Role
 
 public class User
 {
-    [JsonProperty(PropertyName = "id")] public string Id { get; set; }
-    [JsonProperty(PropertyName = "name")] public string Name { get; set; }
-    [JsonProperty(PropertyName = "email")] public string Email { get; set; }
-    [JsonProperty(PropertyName = "role")] public Role Role { get; set; }
-    [JsonProperty(PropertyName = "vitals")]
+    [JsonProperty(PropertyName = "id")] string Id { get; set; }
+    public string Name { get; set; }
+    public string Email { get; set; }
+    public Role Role { get; set; }
     public Vitals Vitals { get; set; } = new();
 }
 
 public class Vitals
 {
-    [JsonProperty(PropertyName = "ECG")] public List<TimestampedVital> Ecg { get; set; } = new();
-    [JsonProperty(PropertyName = "HR")] public List<TimestampedVital> HeartRate { get; set; } = new();
-    [JsonProperty(PropertyName = "SpO2")] public List<TimestampedVital> SpO2 { get; set; } = new();
+    public List<TimestampedVital> Ecg { get; set; } = new();
+    public List<TimestampedVital> HeartRate { get; set; } = new();
+    public List<TimestampedVital> SpO2 { get; set; } = new();
 }
 
 public struct TimestampedVital
