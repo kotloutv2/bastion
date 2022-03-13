@@ -10,12 +10,26 @@ public enum Role
 
 public class User
 {
-    [JsonProperty(PropertyName = "id")] string Id { get; set; }
+    [JsonProperty(PropertyName = "id")] public string Id { get; set; }
     public string Password { get; set; }
+    public string Salt { get; set; }
     public string Name { get; set; }
     public string Email { get; set; }
     public Role Role { get; set; }
     public Vitals Vitals { get; set; } = new();
+}
+
+public class GetUser
+{
+    [JsonProperty(PropertyName = "id")] public string Id { get; set; }
+    public string Email { get; set; }
+}
+
+public class RegisterUser
+{
+    public string Name { get; set; }
+    public string Email { get; set; }
+    public string Password { get; set; }
 }
 
 public class Vitals

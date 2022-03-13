@@ -1,6 +1,8 @@
+using System.Net;
 using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Cosmos;
+using RvmsModels;
 
 namespace UserApi.Controllers;
 
@@ -32,69 +34,77 @@ public class UserController : ControllerBase
 
         _databaseName = _configuration["CosmosDb:DatabaseName"];
         _database = _cosmosClient.CreateDatabaseIfNotExistsAsync(_databaseName).Result;
-
         _partitionKey = _configuration["CosmosDb:PartitionKey"];
-
         _containerName = _configuration["CosmosDb:ContainerName"];
-        _container = _database.CreateContainerIfNotExistsAsync(_containerName, _partitionKey)
+        _container = _database.DefineContainer(_containerName, _partitionKey)
+            .WithUniqueKey()
+            .Path("/Email")
+            .Attach()
+            .CreateIfNotExistsAsync()
             .Result;
     }
 
     /// <summary>
-    /// Get User document
+    /// Get a registered patient.
     /// </summary>
-    /// <param name="userId"></param>
-    /// <returns></returns>
-    [HttpGet("{userId}")]
+    /// <param name="email">User email</param>
+    [HttpGet("patient/{email}")]
     [Produces(MediaTypeNames.Application.Json)]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RvmsModels.User))]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    public async Task<IActionResult> Get(string userId)
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Get(string email)
     {
+        var getUserByEmailQuery =
+            new QueryDefinition("SELECT * from c WHERE c.Email = @email").WithParameter("@email", email);
+        var queryResults = _container.GetItemQueryIterator<RvmsModels.User>(getUserByEmailQuery);
+
+        // Get first user with the given email (there should only be one)
         try
         {
-            RvmsModels.User user = await _container.ReadItemAsync<RvmsModels.User>(userId, new PartitionKey(userId));
-            return Ok(user);
+            while (queryResults.HasMoreResults)
+            {
+                FeedResponse<RvmsModels.User> users = await queryResults.ReadNextAsync();
+                return Ok(users.First());
+            }
+        }
+        catch (Exception ce)
+        {
+            _logger.LogError(ce, null);
+        }
+
+        return NotFound();
+    }
+
+    /// <summary>
+    /// Register a new patient.
+    /// </summary>
+    /// <param name="registerUser">Request body containing user data.</param>
+    /// <returns>User object and URL endpoint.</returns>
+    [HttpPost("auth/patient/register")]
+    public async Task<IActionResult> Post([FromBody] RegisterUser registerUser)
+    {
+        var salt = Security.GenerateSalt();
+        RvmsModels.User userToRegister = new()
+        {
+            Id = Guid.NewGuid().ToString(),
+            Name = registerUser.Name,
+            Email = registerUser.Email,
+            Role = Role.PATIENT,
+            Salt = salt,
+            Password = Security.HashPassword(salt, registerUser.Password)
+        };
+        try
+        {
+            RvmsModels.User newUser =
+                await _container.CreateItemAsync(userToRegister, new PartitionKey((double) userToRegister.Role));
+            return Created($"/api/user/patient/{newUser.Email}", newUser);
         }
         catch (CosmosException ce)
         {
-            _logger.LogError(ce, "Error while trying to get user {userId}", userId);
-            return NotFound();
+            _logger.LogError(ce, null);
+            return ce.StatusCode == HttpStatusCode.Conflict ? Conflict() : StatusCode((int) ce.StatusCode);
         }
     }
-
-    // [HttpPut("{userId}")]
-    // [Consumes(MediaTypeNames.Application.Json)]
-    // [ProducesResponseType(StatusCodes.Status204NoContent)]
-    // [ProducesResponseType(StatusCodes.Status404NotFound)]
-    // public async Task<IActionResult> Put(string userId, [FromBody] Vitals vitals)
-    // {
-    //     RvmsModels.User user;
-    //     PartitionKey partitionKey = new(userId);
-    //     try
-    //     {
-    //         user = await _container.ReadItemAsync<RvmsModels.User>(userId, partitionKey);
-    //     }
-    //     catch (CosmosException)
-    //     {
-    //         return NotFound();
-    //     }
-    //
-    //     user.Vitals.Ecg.AddRange(vitals.Ecg);
-    //     user.Vitals.SkinTemperature.AddRange(vitals.SkinTemperature);
-    //     user.Vitals.SpO2.AddRange(vitals.SpO2);
-    //     try
-    //     {
-    //         await _container.UpsertItemAsync(user, partitionKey);
-    //     }
-    //     catch (CosmosException ce)
-    //     {
-    //         _logger.LogError(ce, "Error while trying to put new vitals for user {userId}", userId);
-    //         return StatusCode(ce.SubStatusCode, ce.Message);
-    //     }
-    //
-    //     return NoContent();
-    // }
 
     /// <summary>
     /// User Login
@@ -103,13 +113,13 @@ public class UserController : ControllerBase
     /// <returns></returns>
     /// <response code="200">Returns a JWT for the user</response>
     /// <response code="401">Invalid login credentials</response>
-    [HttpPost("auth/login")]
-    [Consumes(MediaTypeNames.Application.Json)]
-    [Produces(MediaTypeNames.Application.Json)]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserLogin))]
-    [ProducesResponseTypeAttribute(StatusCodes.Status401Unauthorized)]
-    public UserLogin Post([FromBody] UserLogin userLogin)
-    {
-        return new UserLogin() {Id = userLogin.Id, Password = userLogin.Password};
-    }
+    // [HttpPost("auth/login")]
+    // [Consumes(MediaTypeNames.Application.Json)]
+    // [Produces(MediaTypeNames.Application.Json)]
+    // [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserLogin))]
+    // [ProducesResponseTypeAttribute(StatusCodes.Status401Unauthorized)]
+    // public UserLogin Post([FromBody] UserLogin userLogin)
+    // {
+    //     return new UserLogin() {Id = userLogin.Id, Password = userLogin.Password};
+    // }
 }
