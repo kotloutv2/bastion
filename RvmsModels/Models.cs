@@ -11,6 +11,7 @@ public enum Role
 public class User
 {
     [JsonProperty(PropertyName = "id")] string Id { get; set; }
+    public string Password { get; set; }
     public string Name { get; set; }
     public string Email { get; set; }
     public Role Role { get; set; }
