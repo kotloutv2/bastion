@@ -12,37 +12,12 @@ namespace UserApi.Controllers;
 public class UserController : ControllerBase
 {
     private readonly ILogger<UserController> _logger;
+    private CosmosDbService _cosmosDbService;
 
-    private IConfiguration _configuration { get; }
-
-    private CosmosClient _cosmosClient;
-
-    private Database _database;
-
-    private string _databaseName;
-
-    private Container _container;
-
-    private string _containerName;
-
-    private string _partitionKey;
-
-    public UserController(ILogger<UserController> logger, IConfiguration configuration, CosmosClient cosmosClient)
+    public UserController(ILogger<UserController> logger, CosmosDbService cosmosDbService)
     {
         _logger = logger;
-        _configuration = configuration;
-        _cosmosClient = cosmosClient;
-
-        _databaseName = _configuration["CosmosDb:DatabaseName"];
-        _database = _cosmosClient.CreateDatabaseIfNotExistsAsync(_databaseName).Result;
-        _partitionKey = _configuration["CosmosDb:PartitionKey"];
-        _containerName = _configuration["CosmosDb:ContainerName"];
-        _container = _database.DefineContainer(_containerName, _partitionKey)
-            .WithUniqueKey()
-            .Path("/Email")
-            .Attach()
-            .CreateIfNotExistsAsync()
-            .Result;
+        _cosmosDbService = cosmosDbService;
     }
 
     /// <summary>
@@ -56,7 +31,7 @@ public class UserController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Get([EmailAddress] string email)
     {
-        var user = await GetPatientByEmail(email);
+        var user = await _cosmosDbService.GetPatientByEmail(email);
         if (user != null)
         {
             return Ok(user);
@@ -76,20 +51,10 @@ public class UserController : ControllerBase
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Post([FromBody] RegisterUser registerUser)
     {
-        var salt = Security.GenerateSalt();
-        Patient patientToRegister = new()
-        {
-            Id = Guid.NewGuid().ToString(),
-            Name = registerUser.Name,
-            Email = registerUser.Email,
-            Role = Role.PATIENT,
-            Salt = salt,
-            Password = Security.HashPassword(salt, registerUser.Password)
-        };
         try
         {
             Patient newPatient =
-                await _container.CreateItemAsync(patientToRegister, new PartitionKey((double) patientToRegister.Role));
+                await _cosmosDbService.RegisterPatient(registerUser);
             return Created($"/api/user/patient/{newPatient.Email}", newPatient);
         }
         catch (CosmosException ce)
@@ -123,7 +88,7 @@ public class UserController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Post([FromBody] LogInUser logInUser)
     {
-        var patient = await GetPatientByEmail(logInUser.Email);
+        var patient = await _cosmosDbService.GetPatientByEmail(logInUser.Email);
         if (patient == null)
         {
             return NotFound();
@@ -135,28 +100,5 @@ public class UserController : ControllerBase
         }
 
         return Unauthorized();
-    }
-
-    private async Task<Patient?> GetPatientByEmail(string email)
-    {
-        var getPatientByEmailQuery =
-            new QueryDefinition("SELECT * from c WHERE c.Email = @email").WithParameter("@email", email);
-        var queryResults = _container.GetItemQueryIterator<Patient>(getPatientByEmailQuery);
-
-        // Get first user with the given email (there should only be one)
-        try
-        {
-            while (queryResults.HasMoreResults)
-            {
-                var users = await queryResults.ReadNextAsync();
-                return users.First();
-            }
-        }
-        catch (Exception ce)
-        {
-            _logger.LogError(ce, "Could not find user with email {}", email);
-        }
-
-        return null;
     }
 }
