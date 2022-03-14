@@ -51,7 +51,7 @@ public class UserController : ControllerBase
     /// <param name="email">User email</param>
     [HttpGet("patient/{email}")]
     [Produces(MediaTypeNames.Application.Json)]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RvmsModels.Patient))]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Patient))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Get([EmailAddress] string email)
@@ -77,7 +77,7 @@ public class UserController : ControllerBase
     public async Task<IActionResult> Post([FromBody] RegisterUser registerUser)
     {
         var salt = Security.GenerateSalt();
-        RvmsModels.Patient patientToRegister = new()
+        Patient patientToRegister = new()
         {
             Id = Guid.NewGuid().ToString(),
             Name = registerUser.Name,
@@ -94,11 +94,16 @@ public class UserController : ControllerBase
         }
         catch (CosmosException ce)
         {
-            _logger.LogError(ce, null);
-            return ce.StatusCode == HttpStatusCode.Conflict ? Conflict() : StatusCode((int) ce.StatusCode);
+            if (ce.StatusCode == HttpStatusCode.Conflict)
+            {
+                return Conflict();
+            }
+
+            throw;
         }
-        catch
+        catch (Exception e)
         {
+            _logger.LogError(e, "Exception during patient registration");
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
@@ -112,11 +117,11 @@ public class UserController : ControllerBase
     /// <response code="401">Invalid login credentials</response>
     /// <response code="404">User not found</response>
     [HttpPost("auth/patient/login")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RvmsModels.Patient))]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Patient))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Post([FromBody] RvmsModels.LogInUser logInUser)
+    public async Task<IActionResult> Post([FromBody] LogInUser logInUser)
     {
         var patient = await GetPatientByEmail(logInUser.Email);
         if (patient == null)
@@ -132,11 +137,11 @@ public class UserController : ControllerBase
         return Unauthorized();
     }
 
-    private async Task<RvmsModels.Patient?> GetPatientByEmail(string email)
+    private async Task<Patient?> GetPatientByEmail(string email)
     {
         var getPatientByEmailQuery =
             new QueryDefinition("SELECT * from c WHERE c.Email = @email").WithParameter("@email", email);
-        var queryResults = _container.GetItemQueryIterator<RvmsModels.Patient>(getPatientByEmailQuery);
+        var queryResults = _container.GetItemQueryIterator<Patient>(getPatientByEmailQuery);
 
         // Get first user with the given email (there should only be one)
         try
