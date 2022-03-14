@@ -24,7 +24,6 @@ public class CosmosDbService
             Id = Guid.NewGuid().ToString(),
             Name = registerUser.Name,
             Email = registerUser.Email,
-            Role = Role.PATIENT,
             Salt = salt,
             Password = Security.HashPassword(salt, registerUser.Password)
         };
@@ -39,7 +38,7 @@ public class CosmosDbService
             throw;
         }
     }
-    
+
     public async Task<HealthcarePractitioner> RegisterHealthcarePractitioner(RegisterUser registerHcp)
     {
         var salt = Security.GenerateSalt();
@@ -48,7 +47,6 @@ public class CosmosDbService
             Id = Guid.NewGuid().ToString(),
             Name = registerHcp.Name,
             Email = registerHcp.Email,
-            Role = Role.ADMIN,
             Salt = salt,
             Password = Security.HashPassword(salt, registerHcp.Password)
         };
@@ -66,26 +64,33 @@ public class CosmosDbService
 
     public async Task<Patient?> GetPatientByEmail(string email)
     {
+        return await GetUser<Patient>(email, Role.PATIENT);
+    }
+
+    public async Task<HealthcarePractitioner?> GetHealthcarePractitionerByEmail(string email)
+    {
+        return await GetUser<HealthcarePractitioner>(email, Role.ADMIN);
+    }
+
+    private async Task<T?> GetUser<T>(string email, Role role) where T: IUser
+    {
         var getPatientByEmailQuery =
             new QueryDefinition("SELECT * from c WHERE c.Email = @email and c.Role = @role")
                 .WithParameter("@email", email)
-                .WithParameter("@role", Role.PATIENT);
-        var queryResults = _container.GetItemQueryIterator<Patient>(getPatientByEmailQuery);
+                .WithParameter("@role", role);
+        var queryResults = _container.GetItemQueryIterator<T>(getPatientByEmailQuery);
 
         // Get first user with the given email (there should only be one)
         try
         {
-            while (queryResults.HasMoreResults)
-            {
-                var users = await queryResults.ReadNextAsync();
-                return users.First();
-            }
+            var users = await queryResults.ReadNextAsync();
+            return users.First();
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Could not find patient with email {}", email);
+            _logger.LogError(e, "Could not find user with email {} and role {}", email, role.ToString());
         }
 
-        return null;
+        return default;
     }
 }

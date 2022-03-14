@@ -12,7 +12,7 @@ namespace UserApi.Controllers;
 public class UserController : ControllerBase
 {
     private readonly ILogger<UserController> _logger;
-    private CosmosDbService _cosmosDbService;
+    private readonly CosmosDbService _cosmosDbService;
 
     public UserController(ILogger<UserController> logger, CosmosDbService cosmosDbService)
     {
@@ -29,12 +29,32 @@ public class UserController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Patient))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Get([EmailAddress] string email)
+    public async Task<IActionResult> GetPatient([EmailAddress] string email)
     {
-        var user = await _cosmosDbService.GetPatientByEmail(email);
-        if (user != null)
+        var patient = await _cosmosDbService.GetPatientByEmail(email);
+        if (patient != null)
         {
-            return Ok(user);
+            return Ok(patient);
+        }
+
+        return NotFound();
+    }
+
+    /// <summary>
+    /// Get a registered healthcare practitioner.
+    /// </summary>
+    /// <param name="email">User email</param>
+    [HttpGet("hcp/{email}")]
+    [Produces(MediaTypeNames.Application.Json)]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(HealthcarePractitioner))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetHealthcarePractitioner([EmailAddress] string email)
+    {
+        var healthcarePractitioner = await _cosmosDbService.GetHealthcarePractitionerByEmail(email);
+        if (healthcarePractitioner != null)
+        {
+            return Ok(healthcarePractitioner);
         }
 
         return NotFound();
@@ -71,12 +91,12 @@ public class UserController : ControllerBase
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
-    
+
     /// <summary>
     /// Register a new healthcare practitioner.
     /// </summary>
     /// <param name="registerUser">Request body containing user data.</param>
-    [HttpPost("auth/admin/register")]
+    [HttpPost("auth/hcp/register")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
@@ -87,7 +107,7 @@ public class UserController : ControllerBase
         {
             HealthcarePractitioner newHcp =
                 await _cosmosDbService.RegisterHealthcarePractitioner(registerUser);
-            return Created($"/api/user/patient/{newHcp.Email}", newHcp);
+            return Created($"/api/user/hcp/{newHcp.Email}", newHcp);
         }
         catch (CosmosException ce)
         {
@@ -117,7 +137,7 @@ public class UserController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Post([FromBody] LogInUser logInUser)
+    public async Task<IActionResult> LogInPatient([FromBody] LogInUser logInUser)
     {
         var patient = await _cosmosDbService.GetPatientByEmail(logInUser.Email);
         if (patient == null)
@@ -128,6 +148,35 @@ public class UserController : ControllerBase
         if (Security.ValidatePassword(patient.Salt, patient.Password, logInUser.Password))
         {
             return Ok(patient);
+        }
+
+        return Unauthorized();
+    }
+
+    /// <summary>
+    /// Healthcare Practitioner Login
+    /// </summary>
+    /// <param name="logInUser">Email and password</param>
+    /// <returns></returns>
+    /// <response code="200">Login successful</response>
+    /// <response code="401">Invalid login credentials</response>
+    /// <response code="404">User not found</response>
+    [HttpPost("auth/hcp/login")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Patient))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> LogInHealthcarePractitioner([FromBody] LogInUser logInUser)
+    {
+        var healthcarePractitioner = await _cosmosDbService.GetHealthcarePractitionerByEmail(logInUser.Email);
+        if (healthcarePractitioner == null)
+        {
+            return NotFound();
+        }
+
+        if (Security.ValidatePassword(healthcarePractitioner.Salt, healthcarePractitioner.Password, logInUser.Password))
+        {
+            return Ok(healthcarePractitioner);
         }
 
         return Unauthorized();

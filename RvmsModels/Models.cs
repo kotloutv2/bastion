@@ -9,7 +9,7 @@ public enum Role
     ADMIN
 }
 
-public class Patient
+public interface IUser
 {
     [JsonProperty(PropertyName = "id")] public string Id { get; set; }
 
@@ -18,12 +18,11 @@ public class Patient
 
     public string Salt { get; set; }
     public string Name { get; set; }
-    [EmailAddress] public string Email { get; set; }
-    public Role Role { get; set; }
-    public Vitals Vitals { get; set; } = new();
+
+    public Role Role { get; }
 }
 
-public class HealthcarePractitioner
+public class Patient : IUser
 {
     [JsonProperty(PropertyName = "id")] public string Id { get; set; }
 
@@ -33,8 +32,22 @@ public class HealthcarePractitioner
     public string Salt { get; set; }
     public string Name { get; set; }
     [EmailAddress] public string Email { get; set; }
-    public Role Role { get; set; }
-    public IEnumerable<string> Patients { get; set; }
+    public Vitals Vitals { get; set; } = new();
+    public Role Role => Role.PATIENT;
+}
+
+public class HealthcarePractitioner : IUser
+{
+    [JsonProperty(PropertyName = "id")] public string Id { get; set; }
+
+    [MinLength(Security.MinimumPasswordLength)]
+    public string Password { get; set; }
+
+    public string Salt { get; set; }
+    public string Name { get; set; }
+    [EmailAddress] public string Email { get; set; }
+    public IEnumerable<string> Patients { get; set; } = Enumerable.Empty<string>();
+    public Role Role => Role.ADMIN;
 }
 
 public class RegisterUser
