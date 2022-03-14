@@ -49,7 +49,7 @@ public class UserController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> Post([FromBody] RegisterUser registerUser)
+    public async Task<IActionResult> RegisterPatient([FromBody] RegisterUser registerUser)
     {
         try
         {
@@ -66,9 +66,40 @@ public class UserController : ControllerBase
 
             throw;
         }
-        catch (Exception e)
+        catch (Exception)
         {
-            _logger.LogError(e, "Exception during patient registration");
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+    
+    /// <summary>
+    /// Register a new healthcare practitioner.
+    /// </summary>
+    /// <param name="registerUser">Request body containing user data.</param>
+    [HttpPost("auth/admin/register")]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> RegisterHealthcarePractitioner([FromBody] RegisterUser registerUser)
+    {
+        try
+        {
+            HealthcarePractitioner newHcp =
+                await _cosmosDbService.RegisterHealthcarePractitioner(registerUser);
+            return Created($"/api/user/patient/{newHcp.Email}", newHcp);
+        }
+        catch (CosmosException ce)
+        {
+            if (ce.StatusCode == HttpStatusCode.Conflict)
+            {
+                return Conflict();
+            }
+
+            throw;
+        }
+        catch (Exception)
+        {
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
     }

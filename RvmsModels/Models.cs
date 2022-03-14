@@ -23,6 +23,20 @@ public class Patient
     public Vitals Vitals { get; set; } = new();
 }
 
+public class HealthcarePractitioner
+{
+    [JsonProperty(PropertyName = "id")] public string Id { get; set; }
+
+    [MinLength(Security.MinimumPasswordLength)]
+    public string Password { get; set; }
+
+    public string Salt { get; set; }
+    public string Name { get; set; }
+    [EmailAddress] public string Email { get; set; }
+    public Role Role { get; set; }
+    public IEnumerable<string> Patients { get; set; }
+}
+
 public class RegisterUser
 {
     public string Name { get; set; }
@@ -38,8 +52,6 @@ public class LogInUser
 
     [MinLength(Security.MinimumPasswordLength)]
     public string Password { get; set; }
-
-    public Role Role { get; set; }
 }
 
 public class Vitals
