@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using System.ComponentModel.DataAnnotations;
+using Newtonsoft.Json;
 
 namespace RvmsModels;
 
@@ -8,28 +9,37 @@ public enum Role
     ADMIN
 }
 
-public class User
+public class Patient
 {
     [JsonProperty(PropertyName = "id")] public string Id { get; set; }
+
+    [MinLength(Security.MinimumPasswordLength)]
     public string Password { get; set; }
+
     public string Salt { get; set; }
     public string Name { get; set; }
-    public string Email { get; set; }
+    [EmailAddress] public string Email { get; set; }
     public Role Role { get; set; }
     public Vitals Vitals { get; set; } = new();
-}
-
-public class GetUser
-{
-    [JsonProperty(PropertyName = "id")] public string Id { get; set; }
-    public string Email { get; set; }
 }
 
 public class RegisterUser
 {
     public string Name { get; set; }
-    public string Email { get; set; }
+    [EmailAddress] public string Email { get; set; }
+
+    [MinLength(Security.MinimumPasswordLength)]
     public string Password { get; set; }
+}
+
+public class LogInUser
+{
+    [EmailAddress] public string Email { get; set; }
+
+    [MinLength(Security.MinimumPasswordLength)]
+    public string Password { get; set; }
+
+    public Role Role { get; set; }
 }
 
 public class Vitals

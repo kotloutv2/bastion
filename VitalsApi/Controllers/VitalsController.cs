@@ -2,7 +2,6 @@ using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Cosmos;
 using RvmsModels;
-using System.Text.Json;
 
 namespace VitalsApi.Controllers;
 
@@ -55,8 +54,8 @@ public class VitalsController : ControllerBase
     {
         try
         {
-            RvmsModels.User user = await _container.ReadItemAsync<RvmsModels.User>(userId, new PartitionKey(userId));
-            return Ok(user.Vitals);
+            Patient patient = await _container.ReadItemAsync<Patient>(userId, new PartitionKey(userId));
+            return Ok(patient.Vitals);
         }
         catch (CosmosException ce)
         {
@@ -71,23 +70,23 @@ public class VitalsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Put(string userId, [FromBody] Vitals vitals)
     {
-        RvmsModels.User user;
+        Patient patient;
         PartitionKey partitionKey = new(userId);
         try
         {
-            user = await _container.ReadItemAsync<RvmsModels.User>(userId, partitionKey);
+            patient = await _container.ReadItemAsync<Patient>(userId, partitionKey);
         }
         catch (CosmosException)
         {
             return NotFound();
         }
 
-        user.Vitals.Ecg.AddRange(vitals.Ecg);
-        user.Vitals.SkinTemperature.AddRange(vitals.SkinTemperature);
-        user.Vitals.SpO2.AddRange(vitals.SpO2);
+        patient.Vitals.Ecg.AddRange(vitals.Ecg);
+        patient.Vitals.SkinTemperature.AddRange(vitals.SkinTemperature);
+        patient.Vitals.SpO2.AddRange(vitals.SpO2);
         try
         {
-            await _container.UpsertItemAsync(user, partitionKey);
+            await _container.UpsertItemAsync(patient, partitionKey);
         }
         catch (CosmosException ce)
         {

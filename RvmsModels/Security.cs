@@ -6,8 +6,10 @@ namespace RvmsModels;
 public static class Security
 {
     private const int SaltSize = 128;
-    private const int hashIterationCount = 100000;
-    private const int hashLengthBytes = 32; // 256 / 8
+    private const int HashIterationCount = 100000;
+    private const int HashLengthBytes = 32;
+
+    public const int MinimumPasswordLength = 8;
 
     public static string GenerateSalt(int size = SaltSize)
     {
@@ -23,8 +25,13 @@ public static class Security
             password,
             Convert.FromBase64String(salt),
             KeyDerivationPrf.HMACSHA256,
-            hashIterationCount,
-            hashLengthBytes
+            HashIterationCount,
+            HashLengthBytes
         ));
+    }
+
+    public static bool ValidatePassword(string salt, string hashedPassword, string password)
+    {
+        return HashPassword(salt, password) == hashedPassword;
     }
 }
