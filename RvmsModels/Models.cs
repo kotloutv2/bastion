@@ -69,9 +69,11 @@ public class LogInUser
 
 public class Vitals
 {
-    public List<TimestampedVital> Ecg { get; set; } = new();
-    public List<TimestampedVital> SkinTemperature { get; set; } = new();
-    public List<TimestampedVital> SpO2 { get; set; } = new();
+    public List<TimestampedVital> Ppg { get; set; } = new();
+    
+    public List<TimestampedVital> SkinTemperature1 { get; set; } = new();
+    
+    public List<TimestampedVital> SkinTemperature2 { get; set; } = new();
 }
 
 public struct TimestampedVital

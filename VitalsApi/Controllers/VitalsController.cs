@@ -81,9 +81,9 @@ public class VitalsController : ControllerBase
             return NotFound();
         }
 
-        patient.Vitals.Ecg.AddRange(vitals.Ecg);
-        patient.Vitals.SkinTemperature.AddRange(vitals.SkinTemperature);
-        patient.Vitals.SpO2.AddRange(vitals.SpO2);
+        patient.Vitals.Ppg.AddRange(vitals.Ppg);
+        patient.Vitals.SkinTemperature1.AddRange(vitals.SkinTemperature1);
+        patient.Vitals.SkinTemperature2.AddRange(vitals.SkinTemperature2);
         try
         {
             await _container.UpsertItemAsync(patient, partitionKey);
