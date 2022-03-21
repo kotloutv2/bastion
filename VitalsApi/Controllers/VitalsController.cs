@@ -11,89 +11,79 @@ public class VitalsController : ControllerBase
 {
     private readonly ILogger<VitalsController> _logger;
 
-    private IConfiguration _configuration { get; }
+    private readonly CosmosDbService _cosmosDbService;
+    // private IConfiguration _configuration { get; }
+    //
+    // private CosmosClient _cosmosClient;
+    //
+    // private Database _database;
+    //
+    // private string _databaseName;
+    //
+    // private Container _container;
+    //
+    // private string _containerName;
+    //
+    // private string _partitionKey;
 
-    private CosmosClient _cosmosClient;
-
-    private Database _database;
-
-    private string _databaseName;
-
-    private Container _container;
-
-    private string _containerName;
-
-    private string _partitionKey;
-
-    public VitalsController(ILogger<VitalsController> logger, IConfiguration configuration, CosmosClient cosmosClient)
+    public VitalsController(ILogger<VitalsController> logger, CosmosDbService cosmosDbService)
     {
+        // _logger = logger;
+        // _configuration = configuration;
+        // _cosmosClient = cosmosClient;
+        //
+        // _databaseName = _configuration["CosmosDb:DatabaseName"];
+        // _database = _cosmosClient.CreateDatabaseIfNotExistsAsync(_databaseName).Result;
+        //
+        // _partitionKey = _configuration["CosmosDb:PartitionKey"];
+        //
+        // _containerName = _configuration["CosmosDb:ContainerName"];
+        // _container = _database.CreateContainerIfNotExistsAsync(_containerName, _partitionKey)
+        //     .Result;
         _logger = logger;
-        _configuration = configuration;
-        _cosmosClient = cosmosClient;
-
-        _databaseName = _configuration["CosmosDb:DatabaseName"];
-        _database = _cosmosClient.CreateDatabaseIfNotExistsAsync(_databaseName).Result;
-
-        _partitionKey = _configuration["CosmosDb:PartitionKey"];
-
-        _containerName = _configuration["CosmosDb:ContainerName"];
-        _container = _database.CreateContainerIfNotExistsAsync(_containerName, _partitionKey)
-            .Result;
+        _cosmosDbService = cosmosDbService;
     }
 
     /// <summary>
     /// Get User Vitals
     /// </summary>
-    /// <param name="userId"></param>
+    /// <param name="email">The user's email address</param>
     /// <returns></returns>
-    [HttpGet("{userId}")]
+    [HttpGet("{email}")]
     [Produces(MediaTypeNames.Application.Json)]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Vitals))]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    public async Task<IActionResult> Get(string userId)
+    public async Task<IActionResult> Get(string email)
     {
-        try
+        var patient =
+            await _cosmosDbService
+                .GetPatientByEmail(email); // await _container.ReadItemAsync<Patient>(email, new PartitionKey(email));
+        if (patient != null)
         {
-            Patient patient = await _container.ReadItemAsync<Patient>(userId, new PartitionKey(userId));
             return Ok(patient.Vitals);
         }
-        catch (CosmosException ce)
-        {
-            _logger.LogError(ce, "Error while trying to read from user {userId}", userId);
-            return NotFound();
-        }
+
+        return NotFound();
     }
 
-    [HttpPut("{userId}")]
+    [HttpPut("{email}")]
     [Consumes(MediaTypeNames.Application.Json)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Put(string userId, [FromBody] Vitals vitals)
+    public async Task<IActionResult> Put(string email, [FromBody] Vitals vitals)
     {
-        Patient patient;
-        PartitionKey partitionKey = new(userId);
-        try
-        {
-            patient = await _container.ReadItemAsync<Patient>(userId, partitionKey);
-        }
-        catch (CosmosException)
+        var patient = await _cosmosDbService.GetPatientByEmail(email);
+        if (patient == null)
         {
             return NotFound();
         }
 
-        patient.Vitals.Ppg.AddRange(vitals.Ppg);
-        patient.Vitals.SkinTemperature1.AddRange(vitals.SkinTemperature1);
-        patient.Vitals.SkinTemperature2.AddRange(vitals.SkinTemperature2);
-        try
+        var updatedPatient = await _cosmosDbService.AddVitals(patient, vitals);
+        if (updatedPatient != null)
         {
-            await _container.UpsertItemAsync(patient, partitionKey);
-        }
-        catch (CosmosException ce)
-        {
-            _logger.LogError(ce, "Error while trying to put new vitals for user {userId}", userId);
-            return StatusCode(ce.SubStatusCode, ce.Message);
+            return Ok(updatedPatient);
         }
 
-        return NoContent();
+        return BadRequest(updatedPatient);
     }
 }
