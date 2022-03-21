@@ -16,23 +16,31 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Set up .NET Core
+      - name: Set up .NET
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '3.1.301'
-          include-prerelease: true
+          dotnet-version: '6.0.3'
 
       - name: Build with dotnet
         run: dotnet build --configuration Release
 
-      - name: dotnet publish
-        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
+      - name: dotnet publish UserApi
+        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/UserApi
+        
+      - name: dotnet publish VitalsApi
+        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/UserApi
 
-      - name: Upload artifact for deployment job
+      - name: Upload artifact for UserApi deployment job
         uses: actions/upload-artifact@v2
         with:
           name: .net-app
-          path: ${{env.DOTNET_ROOT}}/myapp
+          path: ${{env.DOTNET_ROOT}}/UserApi
+
+      - name: Upload artifact for VitalsApi deployment job
+        uses: actions/upload-artifact@v2
+        with:
+          name: .net-app
+          path: ${{env.DOTNET_ROOT}}/VitalsApi
 
   deploy:
     runs-on: windows-latest
