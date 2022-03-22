@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using System.ComponentModel.DataAnnotations;
+using Newtonsoft.Json;
 
 namespace RvmsModels;
 
@@ -8,20 +9,71 @@ public enum Role
     ADMIN
 }
 
-public class User
+public interface IUser
 {
-    [JsonProperty(PropertyName = "id")] string Id { get; set; }
+    [JsonProperty(PropertyName = "id")] public string Id { get; set; }
+
+    [MinLength(Security.MinimumPasswordLength)]
+    public string Password { get; set; }
+
+    public string Salt { get; set; }
     public string Name { get; set; }
-    public string Email { get; set; }
-    public Role Role { get; set; }
+
+    public Role Role { get; }
+}
+
+public class Patient : IUser
+{
+    [JsonProperty(PropertyName = "id")] public string Id { get; set; }
+
+    [MinLength(Security.MinimumPasswordLength)]
+    public string Password { get; set; }
+
+    public string Salt { get; set; }
+    public string Name { get; set; }
+    [EmailAddress] public string Email { get; set; }
     public Vitals Vitals { get; set; } = new();
+    public Role Role => Role.PATIENT;
+}
+
+public class HealthcarePractitioner : IUser
+{
+    [JsonProperty(PropertyName = "id")] public string Id { get; set; }
+
+    [MinLength(Security.MinimumPasswordLength)]
+    public string Password { get; set; }
+
+    public string Salt { get; set; }
+    public string Name { get; set; }
+    [EmailAddress] public string Email { get; set; }
+    public IEnumerable<string> Patients { get; set; } = Enumerable.Empty<string>();
+    public Role Role => Role.ADMIN;
+}
+
+public class RegisterUser
+{
+    public string Name { get; set; }
+    [EmailAddress] public string Email { get; set; }
+
+    [MinLength(Security.MinimumPasswordLength)]
+    public string Password { get; set; }
+}
+
+public class LogInUser
+{
+    [EmailAddress] public string Email { get; set; }
+
+    [MinLength(Security.MinimumPasswordLength)]
+    public string Password { get; set; }
 }
 
 public class Vitals
 {
-    public List<TimestampedVital> Ecg { get; set; } = new();
-    public List<TimestampedVital> HeartRate { get; set; } = new();
-    public List<TimestampedVital> SpO2 { get; set; } = new();
+    public List<TimestampedVital> Ppg { get; set; } = new();
+    
+    public List<TimestampedVital> SkinTemperature1 { get; set; } = new();
+    
+    public List<TimestampedVital> SkinTemperature2 { get; set; } = new();
 }
 
 public struct TimestampedVital
