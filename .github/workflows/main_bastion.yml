@@ -28,7 +28,7 @@ jobs:
         run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/UserApi
         
       - name: dotnet publish VitalsApi
-        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/UserApi
+        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/VitalsApi
 
       - name: Upload artifact for UserApi deployment job
         uses: actions/upload-artifact@v2
