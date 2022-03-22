@@ -12,34 +12,9 @@ public class VitalsController : ControllerBase
     private readonly ILogger<VitalsController> _logger;
 
     private readonly CosmosDbService _cosmosDbService;
-    // private IConfiguration _configuration { get; }
-    //
-    // private CosmosClient _cosmosClient;
-    //
-    // private Database _database;
-    //
-    // private string _databaseName;
-    //
-    // private Container _container;
-    //
-    // private string _containerName;
-    //
-    // private string _partitionKey;
 
     public VitalsController(ILogger<VitalsController> logger, CosmosDbService cosmosDbService)
     {
-        // _logger = logger;
-        // _configuration = configuration;
-        // _cosmosClient = cosmosClient;
-        //
-        // _databaseName = _configuration["CosmosDb:DatabaseName"];
-        // _database = _cosmosClient.CreateDatabaseIfNotExistsAsync(_databaseName).Result;
-        //
-        // _partitionKey = _configuration["CosmosDb:PartitionKey"];
-        //
-        // _containerName = _configuration["CosmosDb:ContainerName"];
-        // _container = _database.CreateContainerIfNotExistsAsync(_containerName, _partitionKey)
-        //     .Result;
         _logger = logger;
         _cosmosDbService = cosmosDbService;
     }
