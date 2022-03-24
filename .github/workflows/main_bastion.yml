@@ -70,7 +70,7 @@ jobs:
 #          name: vitals-api
         
     steps:
-      - name: Download UserApi artifact from build job
+      - name: Download artifact from build job
         uses: actions/download-artifact@v2
         with:
           name: bastion

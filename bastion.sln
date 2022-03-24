@@ -1,10 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UserApi", "UserApi\UserApi.csproj", "{BFD85044-F582-41E8-9D7B-77515356108D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RvmsApis", "RvmsApis\RvmsApis.csproj", "{BFD85044-F582-41E8-9D7B-77515356108D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RvmsModels", "RvmsModels\RvmsModels.csproj", "{3DA7738F-A504-4902-A75C-CB05B422ED23}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VitalsApi", "VitalsApi\VitalsApi.csproj", "{FD2C34C1-5DE0-436B-8A24-201A66FC517A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -20,9 +18,5 @@ Global
 		{3DA7738F-A504-4902-A75C-CB05B422ED23}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3DA7738F-A504-4902-A75C-CB05B422ED23}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3DA7738F-A504-4902-A75C-CB05B422ED23}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FD2C34C1-5DE0-436B-8A24-201A66FC517A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FD2C34C1-5DE0-436B-8A24-201A66FC517A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FD2C34C1-5DE0-436B-8A24-201A66FC517A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FD2C34C1-5DE0-436B-8A24-201A66FC517A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

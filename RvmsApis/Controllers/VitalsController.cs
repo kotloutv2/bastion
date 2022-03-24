@@ -1,9 +1,9 @@
+using System.ComponentModel.DataAnnotations;
 using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.Cosmos;
 using RvmsModels;
 
-namespace VitalsApi.Controllers;
+namespace UserApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -28,7 +28,9 @@ public class VitalsController : ControllerBase
     [Produces(MediaTypeNames.Application.Json)]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Vitals))]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    public async Task<IActionResult> Get(string email)
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Get([EmailAddress] string email)
     {
         var patient =
             await _cosmosDbService
@@ -44,8 +46,9 @@ public class VitalsController : ControllerBase
     [HttpPut("{email}")]
     [Consumes(MediaTypeNames.Application.Json)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Put(string email, [FromBody] Vitals vitals)
+    public async Task<IActionResult> Put([EmailAddress] string email, [FromBody] Vitals vitals)
     {
         var patient = await _cosmosDbService.GetPatientByEmail(email);
         if (patient == null)
