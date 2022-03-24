@@ -27,24 +27,6 @@ jobs:
       - name: dotnet publish Bastion
         run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/bastion
       
-#      - name: dotnet publish UserApi
-#        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/UserApi
-#        
-#      - name: dotnet publish VitalsApi
-#        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/VitalsApi
-
-#      - name: Upload artifact for UserApi deployment job
-#        uses: actions/upload-artifact@v2
-#        with:
-#          name: user-api
-#          path: ${{env.DOTNET_ROOT}}/UserApi
-
-#      - name: Upload artifact for VitalsApi deployment job
-#        uses: actions/upload-artifact@v2
-#        with:
-#          name: vitals-api
-#          path: ${{env.DOTNET_ROOT}}/VitalsApi
-
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v2
         with:
@@ -58,17 +40,6 @@ jobs:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
-#    steps:
-#      - name: Download UserApi artifact from build job
-#        uses: actions/download-artifact@v2
-#        with:
-#          name: user-api
-
-#      - name: Download VitalsApi artifact from build job
-#        uses: actions/download-artifact@v2
-#        with:
-#          name: vitals-api
-        
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v2
