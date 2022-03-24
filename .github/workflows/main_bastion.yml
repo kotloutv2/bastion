@@ -33,13 +33,13 @@ jobs:
       - name: Upload artifact for UserApi deployment job
         uses: actions/upload-artifact@v2
         with:
-          name: .net-app
+          name: user-api
           path: ${{env.DOTNET_ROOT}}/UserApi
 
       - name: Upload artifact for VitalsApi deployment job
         uses: actions/upload-artifact@v2
         with:
-          name: .net-app
+          name: vitals-api
           path: ${{env.DOTNET_ROOT}}/VitalsApi
 
   deploy:
@@ -50,10 +50,15 @@ jobs:
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
     steps:
-      - name: Download artifact from build job
+      - name: Download UserApi artifact from build job
         uses: actions/download-artifact@v2
         with:
-          name: .net-app
+          name: user-api
+
+      - name: Download VitalsApi artifact from build job
+          uses: actions/download-artifact@v2
+          with:
+            name: vitals-api
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
