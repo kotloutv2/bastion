@@ -1,6 +1,7 @@
 using Microsoft.Azure.Cosmos;
 using RvmsModels;
 
+const string CorsAllOriginsPolicy = "allOrigins";
 var builder = WebApplication.CreateBuilder(args);
 builder.Logging.AddConsole();
 
@@ -11,6 +12,10 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSwaggerGenNewtonsoftSupport();
+
+builder.Services.AddCors(options => 
+    options.AddPolicy(name: CorsAllOriginsPolicy, builder => 
+        builder.WithOrigins("*")));
 
 // Add singleton for Cosmos DB service
 builder.Services.AddSingleton(InitializeCosmosDbService());
@@ -23,6 +28,8 @@ app.UseSwaggerUI();
 
 
 app.UseHttpsRedirection();
+
+app.UseCors(CorsAllOriginsPolicy);
 
 app.UseAuthorization();
 
