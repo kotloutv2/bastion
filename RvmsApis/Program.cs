@@ -1,21 +1,25 @@
 using Microsoft.Azure.Cosmos;
 using RvmsModels;
 
-const string CorsAllOriginsPolicy = "allOrigins";
+const string CorsAllOriginsPolicy = "allOriginsHeadersMethods";
 var builder = WebApplication.CreateBuilder(args);
 builder.Logging.AddConsole();
 
 // Add services to the container.
-
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: CorsAllOriginsPolicy, builder =>
+        {
+            builder.WithOrigins("*");
+            builder.WithHeaders("*");
+            builder.WithMethods("*");
+        });
+});
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSwaggerGenNewtonsoftSupport();
-
-builder.Services.AddCors(options => 
-    options.AddPolicy(name: CorsAllOriginsPolicy, builder => 
-        builder.WithOrigins("*")));
 
 // Add singleton for Cosmos DB service
 builder.Services.AddSingleton(InitializeCosmosDbService());
