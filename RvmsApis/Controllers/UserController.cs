@@ -181,4 +181,16 @@ public class UserController : ControllerBase
 
         return Unauthorized();
     }
+
+    [HttpGet("hcp/{hcpEmail}/patients")]
+    public async Task<IActionResult> GetHealthcarePractitionerPatients([EmailAddress] string hcpEmail)
+    {
+        var healthcarePractitioner = await _cosmosDbService.GetHealthcarePractitionerByEmail(hcpEmail);
+        if (healthcarePractitioner != null)
+        {
+            return Ok(healthcarePractitioner.Patients);
+        }
+        
+        return NotFound();
+    }
 }
