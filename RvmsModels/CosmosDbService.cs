@@ -110,4 +110,26 @@ public class CosmosDbService
 
         return default;
     }
+
+    public async Task<HealthcarePractitioner?> AddPatientToHcp(HealthcarePractitioner hcp, string newPatientEmail)
+    {
+        var addNewPatient = new List<PatchOperation>
+        {
+            PatchOperation.Add("/Patients", new string[] {newPatientEmail}),
+        };
+        try
+        {
+            var updatedHcp = await _container.PatchItemAsync<HealthcarePractitioner>(
+                hcp.Id,
+                new PartitionKey((double) Role.ADMIN),
+                addNewPatient
+            );
+            return updatedHcp;
+        }
+        catch (CosmosException ce)
+        {
+            _logger.LogError(ce, "Error while trying to add patient {} for user {}", newPatientEmail, hcp.Email);
+            return null;
+        }
+    }
 }

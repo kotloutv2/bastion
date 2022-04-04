@@ -183,6 +183,9 @@ public class UserController : ControllerBase
     }
 
     [HttpGet("hcp/{hcpEmail}/patients")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<string>))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetHealthcarePractitionerPatients([EmailAddress] string hcpEmail)
     {
         var healthcarePractitioner = await _cosmosDbService.GetHealthcarePractitionerByEmail(hcpEmail);
@@ -190,7 +193,41 @@ public class UserController : ControllerBase
         {
             return Ok(healthcarePractitioner.Patients);
         }
-        
+
         return NotFound();
+    }
+
+    [HttpPut("hcp/{hcpEmail}/patients/{patientEmail}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(HealthcarePractitioner))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> AddPatientToHcp([EmailAddress] string hcpEmail,
+        [EmailAddress] string patientEmail)
+    {
+        var patientToAdd = await _cosmosDbService.GetPatientByEmail(patientEmail);
+        if (patientToAdd == null)
+        {
+            return NotFound($"Patient with email {patientEmail} not found.");
+        }
+
+        var healthcarePractitioner = await _cosmosDbService.GetHealthcarePractitionerByEmail(hcpEmail);
+        if (healthcarePractitioner == null)
+        {
+            return NotFound($"Healthcare Practitioner with email {hcpEmail} not found.");
+        }
+
+        if (healthcarePractitioner.Patients.Contains(patientToAdd.Email, StringComparer.InvariantCultureIgnoreCase))
+        {
+            return Conflict($"Patient {patientEmail} is already registered with Healthcare Practitioner {hcpEmail}.");
+        }
+
+        var updatedHcp = await _cosmosDbService.AddPatientToHcp(healthcarePractitioner, patientEmail);
+        if (updatedHcp == null)
+        {
+            return Conflict($"Unable to add patient {patientEmail} to HCP account.");
+        }
+
+        return Ok(updatedHcp);
     }
 }
