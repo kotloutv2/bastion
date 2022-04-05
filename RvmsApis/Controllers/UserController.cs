@@ -230,4 +230,38 @@ public class UserController : ControllerBase
 
         return Ok(updatedHcp);
     }
+
+    [HttpDelete("hcp/{hcpEmail}/patients/{patientEmail}")]
+    [Consumes(MediaTypeNames.Application.Json)]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Patient))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Delete([EmailAddress] string hcpEmail, [EmailAddress] string patientEmail)
+    {
+        var patient = await _cosmosDbService.GetPatientByEmail(patientEmail);
+        if (patient == null)
+        {
+            return NotFound($"Patient {patientEmail} not found.");
+        }
+
+        var hcp = await _cosmosDbService.GetHealthcarePractitionerByEmail(hcpEmail);
+        if (hcp == null)
+        {
+            return NotFound($"Healthcare Practitioner {hcpEmail} not found.");
+        }
+
+        if (!hcp.Patients.Contains(patientEmail, StringComparer.InvariantCultureIgnoreCase))
+        {
+            return Conflict($"Patient {patientEmail} is not registered with Healthcare Practitioner {hcpEmail}.");
+        }
+
+        var updatedHcp = await _cosmosDbService.RemovePatientFromHcp(hcp, patientEmail);
+        if (updatedHcp == null)
+        {
+            return Conflict($"Unable to add Patient {patientEmail} to Healthcare Practitioner {hcpEmail}");
+        }
+
+        return Ok(updatedHcp);
+    }
 }

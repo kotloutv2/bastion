@@ -136,7 +136,40 @@ public class CosmosDbService
         }
         catch (CosmosException ce)
         {
-            _logger.LogError(ce, "Error while trying to add patient {} for user {}", newPatientEmail, hcp.Email);
+            _logger.LogError(ce, "Error while trying to add patient {} for healthcare practitioner {}", newPatientEmail,
+                hcp.Email);
+            return null;
+        }
+    }
+
+    public async Task<HealthcarePractitioner?> RemovePatientFromHcp(HealthcarePractitioner hcp, string patientEmail)
+    {
+        var prevNumPatients = hcp.Patients.Count();
+        var modifiedPatients = hcp.Patients.Except(new[] {patientEmail}).ToList();
+
+        // skip the patch if patient was never registered with HCP
+        if (prevNumPatients == modifiedPatients.Count)
+        {
+            return hcp;
+        }
+
+        var removePatientOperation = new List<PatchOperation>
+        {
+            PatchOperation.Replace("/Patients", modifiedPatients),
+        };
+        try
+        {
+            var updatedHcp = await _container.PatchItemAsync<HealthcarePractitioner>(
+                hcp.Id,
+                new PartitionKey((double) Role.ADMIN),
+                removePatientOperation
+            );
+            return updatedHcp;
+        }
+        catch (CosmosException ce)
+        {
+            _logger.LogError(ce, "Error while trying to remove patient {} from healthcare practitioner {}",
+                patientEmail, hcp.Email);
             return null;
         }
     }
