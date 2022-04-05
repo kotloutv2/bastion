@@ -74,16 +74,29 @@ public class CosmosDbService
 
     public async Task<Patient?> AddVitals(Patient patient, Vitals vitals)
     {
-        patient.Vitals.Ppg.AddRange(vitals.Ppg);
-        patient.Vitals.SkinTemperature1.AddRange(vitals.SkinTemperature1);
-        patient.Vitals.SkinTemperature2.AddRange(vitals.SkinTemperature2);
+        // patient.Vitals.Ppg.AddRange(vitals.Ppg);
+        // patient.Vitals.SkinTemperature1.AddRange(vitals.SkinTemperature1);
+        // patient.Vitals.SkinTemperature2.AddRange(vitals.SkinTemperature2);
+        var vitalsUpdate = new List<PatchOperation>
+        {
+            // PatchOperation.Add("/Vitals/-", patient.Vitals)
+            PatchOperation.Add("/Vitals/Ppg/-", vitals.Ppg),
+            PatchOperation.Add("/Vitals/SkinTemperature1/-", vitals.SkinTemperature1),
+            PatchOperation.Add("/Vitals/SkinTemperature2/-", vitals.SkinTemperature2)
+        };
         try
         {
-            var updatedPatient = await _container.UpsertItemAsync(patient, new PartitionKey((double) Role.PATIENT));
+            // var updatedPatient = await _container.UpsertItemAsync(patient, new PartitionKey((double) Role.PATIENT));
+            var updatedPatient = await _container.PatchItemAsync<Patient>(
+                patient.Id,
+                new PartitionKey((double) Role.PATIENT),
+                vitalsUpdate
+            );
             return updatedPatient;
         }
         catch (CosmosException ce)
         {
+            Console.Error.WriteLine(ce);            
             _logger.LogError(ce, "Error while trying to put new vitals for user {email}", patient.Email);
             return null;
         }
@@ -115,7 +128,7 @@ public class CosmosDbService
     {
         var addNewPatient = new List<PatchOperation>
         {
-            PatchOperation.Add("/Patients", new string[] {newPatientEmail}),
+            PatchOperation.Add("/Patients/-", newPatientEmail),
         };
         try
         {

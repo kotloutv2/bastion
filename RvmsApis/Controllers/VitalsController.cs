@@ -27,14 +27,13 @@ public class VitalsController : ControllerBase
     [HttpGet("{email}")]
     [Produces(MediaTypeNames.Application.Json)]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Vitals))]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Get([EmailAddress] string email)
     {
         var patient =
             await _cosmosDbService
-                .GetPatientByEmail(email); // await _container.ReadItemAsync<Patient>(email, new PartitionKey(email));
+                .GetPatientByEmail(email);
         if (patient != null)
         {
             return Ok(patient.Vitals);
@@ -45,7 +44,7 @@ public class VitalsController : ControllerBase
 
     [HttpPut("{email}")]
     [Consumes(MediaTypeNames.Application.Json)]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status200OK, Type=typeof(Patient))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Put([EmailAddress] string email, [FromBody] Vitals vitals)
